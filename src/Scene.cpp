@@ -190,19 +190,375 @@ void Scene::DrawNetworkCabinet(
     Shader& shader,
     const Cube& cube) const
 {
-    glm::mat4 model =
-        glm::translate(
-            glm::mat4(1.0f),
-            glm::vec3(7.35f, 1.0f, -5.2f));
+    // ---------------------------------------------------------
+    // NETWORK CABINET POSITION
+    // ---------------------------------------------------------
+    glm::vec3 position(
+        7.35f,
+        1.0f,
+        -5.2f
+    );
 
-    model =
-        glm::scale(
-            model,
-            glm::vec3(0.8f, 2.0f, 0.8f));
+    // Overall cabinet size
+    glm::vec3 cabinetScale(
+        0.8f,
+        2.0f,
+        0.8f
+    );
 
-    shader.setMat4("model", model);
+    // ---------------------------------------------------------
+    // Helper for drawing cabinet parts
+    // ---------------------------------------------------------
+    auto drawPart =
+        [&](const glm::vec3& localPosition,
+            const glm::vec3& localScale,
+            const glm::vec3& color)
+        {
+            glm::mat4 model =
+                glm::mat4(1.0f);
 
-    cube.Draw();
+            model = glm::translate(
+                model,
+                position
+            );
+
+            // Rotate the COMPLETE network cabinet
+            model = glm::rotate(
+                model,
+                glm::radians(180.0f),
+                glm::vec3(0.0f, 1.0f, 0.0f)
+            );
+
+            model = glm::translate(
+                model,
+                localPosition
+            );
+            model =
+                glm::scale(
+                    model,
+                    localScale
+                );
+
+            shader.setVec3(
+                "objectColor",
+                color.x,
+                color.y,
+                color.z
+            );
+
+            shader.setMat4(
+                "model",
+                model
+            );
+
+            cube.Draw();
+        };
+
+    // ---------------------------------------------------------
+    // COLOURS
+    // ---------------------------------------------------------
+    glm::vec3 cabinetBlack(
+        0.08f,
+        0.09f,
+        0.10f
+    );
+
+    glm::vec3 darkMetal(
+        0.14f,
+        0.15f,
+        0.16f
+    );
+
+    glm::vec3 metal(
+        0.30f,
+        0.32f,
+        0.34f
+    );
+
+    glm::vec3 glass(
+        0.12f,
+        0.20f,
+        0.25f
+    );
+
+    glm::vec3 silver(
+        0.55f,
+        0.57f,
+        0.58f
+    );
+
+    glm::vec3 serverBlack(
+        0.05f,
+        0.055f,
+        0.06f
+    );
+
+    glm::vec3 blue(
+        0.02f,
+        0.35f,
+        0.75f
+    );
+
+    glm::vec3 green(
+        0.05f,
+        0.80f,
+        0.20f
+    );
+
+    glm::vec3 red(
+        0.85f,
+        0.05f,
+        0.04f
+    );
+
+    // =========================================================
+    // MAIN CABINET FRAME
+    // =========================================================
+
+    // Top
+    drawPart(
+        { 0.0f, 0.97f, 0.0f },
+        { 0.82f, 0.08f, 0.82f },
+        cabinetBlack
+    );
+
+    // Bottom
+    drawPart(
+        { 0.0f, -0.97f, 0.0f },
+        { 0.82f, 0.08f, 0.82f },
+        cabinetBlack
+    );
+
+    // Left vertical frame
+    drawPart(
+        { -0.36f, 0.0f, 0.0f },
+        { 0.08f, 1.90f, 0.78f },
+        darkMetal
+    );
+
+    // Right vertical frame
+    drawPart(
+        { 0.36f, 0.0f, 0.0f },
+        { 0.08f, 1.90f, 0.78f },
+        darkMetal
+    );
+
+    // Back panel
+    drawPart(
+        { 0.0f, 0.0f, 0.35f },
+        { 0.68f, 1.85f, 0.06f },
+        darkMetal
+    );
+
+    // =========================================================
+    // FRONT DOOR
+    // =========================================================
+
+    // Outer door
+    drawPart(
+        { 0.0f, 0.0f, -0.43f },
+        { 0.68f, 1.82f, 0.055f },
+        cabinetBlack
+    );
+
+    // Glass window
+    drawPart(
+        { 0.0f, 0.20f, -0.465f },
+        { 0.55f, 1.25f, 0.018f },
+        glass
+    );
+
+    // Door top frame
+    drawPart(
+        { 0.0f, 0.86f, -0.47f },
+        { 0.65f, 0.06f, 0.035f },
+        metal
+    );
+
+    // Door bottom frame
+    drawPart(
+        { 0.0f, -0.84f, -0.47f },
+        { 0.65f, 0.06f, 0.035f },
+        metal
+    );
+
+    // Door left frame
+    drawPart(
+        { -0.31f, 0.0f, -0.47f },
+        { 0.045f, 1.75f, 0.035f },
+        metal
+    );
+
+    // Door right frame
+    drawPart(
+        { 0.31f, 0.0f, -0.47f },
+        { 0.045f, 1.75f, 0.035f },
+        metal
+    );
+
+    // =========================================================
+    // DOOR HANDLE / LOCK
+    // =========================================================
+
+    drawPart(
+        { 0.28f, 0.35f, -0.51f },
+        { 0.035f, 0.22f, 0.035f },
+        silver
+    );
+
+    drawPart(
+        { 0.28f, 0.48f, -0.52f },
+        { 0.06f, 0.06f, 0.025f },
+        darkMetal
+    );
+
+    // =========================================================
+    // RACK RAILS
+    // =========================================================
+
+    // Left rack rail
+    drawPart(
+        { -0.25f, 0.0f, -0.32f },
+        { 0.035f, 1.65f, 0.035f },
+        silver
+    );
+
+    // Right rack rail
+    drawPart(
+        { 0.25f, 0.0f, -0.32f },
+        { 0.035f, 1.65f, 0.035f },
+        silver
+    );
+
+    // =========================================================
+    // SERVER UNITS
+    // =========================================================
+
+    for (int i = 0; i < 6; i++)
+    {
+        float y =
+            0.62f - (i * 0.25f);
+
+        // Server body
+        drawPart(
+            { 0.0f, y, -0.35f },
+            { 0.48f, 0.18f, 0.28f },
+            serverBlack
+        );
+
+        // Server front panel
+        drawPart(
+            { 0.0f, y, -0.50f },
+            { 0.48f, 0.17f, 0.025f },
+            darkMetal
+        );
+
+        // Server left indicator
+        drawPart(
+            { -0.17f, y, -0.53f },
+            { 0.025f, 0.025f, 0.015f },
+            green
+        );
+
+        // Server right indicator
+        drawPart(
+            { -0.11f, y, -0.53f },
+            { 0.025f, 0.025f, 0.015f },
+            blue
+        );
+
+        // Server ventilation
+        for (int v = 0; v < 4; v++)
+        {
+            drawPart(
+                {
+                    0.05f + v * 0.06f,
+                    y,
+                    -0.53f
+                },
+                { 0.025f, 0.035f, 0.012f },
+                cabinetBlack
+            );
+        }
+    }
+
+    // =========================================================
+    // NETWORK SWITCH
+    // =========================================================
+
+    drawPart(
+        { 0.0f, -0.72f, -0.35f },
+        { 0.50f, 0.14f, 0.28f },
+        darkMetal
+    );
+
+    drawPart(
+        { 0.0f, -0.72f, -0.51f },
+        { 0.50f, 0.10f, 0.025f },
+        serverBlack
+    );
+
+    // Ethernet port lights
+    for (int i = 0; i < 8; i++)
+    {
+        glm::vec3 lightColor =
+            (i % 2 == 0) ? green : blue;
+
+        drawPart(
+            {
+                -0.20f + i * 0.055f,
+                -0.72f,
+                -0.54f
+            },
+            { 0.025f, 0.035f, 0.012f },
+            lightColor
+        );
+    }
+
+    // =========================================================
+    // TOP VENTILATION
+    // =========================================================
+
+    for (int i = 0; i < 7; i++)
+    {
+        drawPart(
+            {
+                -0.24f + i * 0.08f,
+                0.91f,
+                -0.05f
+            },
+            { 0.035f, 0.025f, 0.55f },
+            cabinetBlack
+        );
+    }
+
+    // =========================================================
+    // RUBBER / METAL FEET
+    // =========================================================
+
+    drawPart(
+        { -0.28f, -1.04f, -0.25f },
+        { 0.15f, 0.08f, 0.15f },
+        cabinetBlack
+    );
+
+    drawPart(
+        { 0.28f, -1.04f, -0.25f },
+        { 0.15f, 0.08f, 0.15f },
+        cabinetBlack
+    );
+
+    drawPart(
+        { -0.28f, -1.04f, 0.25f },
+        { 0.15f, 0.08f, 0.15f },
+        cabinetBlack
+    );
+
+    drawPart(
+        { 0.28f, -1.04f, 0.25f },
+        { 0.15f, 0.08f, 0.15f },
+        cabinetBlack
+    );
 }
 void Scene::DrawAirConditioner(
     Shader& shader,
@@ -223,9 +579,9 @@ void Scene::DrawAirConditioner(
     // ============================================================
 
     glm::vec3 position(
-        6.2f,
+        7.0f,
         2.65f,
-        0.05f
+        5.92f
     );
 
     // Overall size of the COMPLETE air conditioner.
@@ -275,7 +631,7 @@ void Scene::DrawAirConditioner(
             model =
                 glm::rotate(
                     model,
-                    glm::radians(180.0f),
+                    glm::radians(0.0f),
                     glm::vec3(0.0f, 1.0f, 0.0f)
                 );
 
@@ -569,7 +925,7 @@ void Scene::DrawAirConditioner(
     drawPart(
         glm::vec3(
             0.0f,
-            -0.285f,
+            -3.285f,
             -0.455f
         ),
 
