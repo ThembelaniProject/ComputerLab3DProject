@@ -1,4 +1,4 @@
-#include "Scene.h"
+﻿#include "Scene.h"
 
 #include "Room.h"
 #include "Desk.h"
@@ -9,11 +9,15 @@
 #include "Cube.h"
 #include "Shader.h"
 #include "Ceiling.h"
+#include "Texture.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 Scene::Scene()
+    : keyboardTexture("C:/Users/Thembelani/source/repos/ThembelaniProject/ComputerLab3DProject/Resources/Textures/keyboard.png"),
+    pcFrontTexture("C:/Users/Thembelani/source/repos/ThembelaniProject/ComputerLab3DProject/Resources/Textures/pc.png"),
+    airconTexture("C:/Users/Thembelani/source/repos/ThembelaniProject/ComputerLab3DProject/Resources/Textures/aircon.png")
 {
     room = new Room();
     desk = new Desk();
@@ -41,6 +45,7 @@ void Scene::Draw(
     DrawProjectionScreen(shader, cube);
     DrawProjector(shader, cube);
     DrawWhiteboard(shader, cube);
+
 
     glm::mat4 roomModel(1.0f);
 
@@ -85,6 +90,8 @@ void Scene::DrawWorkstations(
             desk->Draw(
                 shader,
                 cube,
+                keyboardTexture,
+                pcFrontTexture,   // ← pass it here
                 deskModel);
 
             //---------------- Chair ----------------
@@ -140,6 +147,8 @@ void Scene::DrawLecturerStation(
     desk->Draw(
         shader,
         cube,
+        keyboardTexture,
+        pcFrontTexture,
         model);
 
     //-----------------------------
@@ -195,26 +204,781 @@ void Scene::DrawNetworkCabinet(
 
     cube.Draw();
 }
-
 void Scene::DrawAirConditioner(
     Shader& shader,
     const Cube& cube) const
 {
-    glm::mat4 model =
-        glm::translate(
-            glm::mat4(1.0f),
-            glm::vec3(7.35f, 2.65f, -5.8f));
+    // ============================================================
+    // WALL-MOUNTED SPLIT AIR CONDITIONER
+    // ============================================================
+    //
+    // The entire air conditioner is controlled as ONE assembly.
+    //
+    // position.x = move left / right
+    // position.y = move up / down
+    // position.z = move front / back
+    //
+    // Change ONLY position.x if you want to align it with
+    // the network cabinet / wires.
+    // ============================================================
 
-    model =
-        glm::scale(
-            model,
-            glm::vec3(1.2f, 0.5f, 0.4f));
+    glm::vec3 position(
+        6.2f,
+        2.65f,
+        0.05f
+    );
 
-    shader.setMat4("model", model);
+    // Overall size of the COMPLETE air conditioner.
+    // X is deliberately smaller so the AC is not too long.
+    glm::vec3 acScale(
+        0.80f,
+        0.90f,
+        0.90f
+    );
 
-    cube.Draw();
+    // ============================================================
+    // HELPER FUNCTION
+    // ============================================================
+    //
+    // Every component is positioned relative to the same
+    // air-conditioner origin.
+    //
+    // This makes all parts move together as ONE unit.
+    // ============================================================
+
+    auto drawPart =
+        [&](const glm::vec3& localPosition,
+            const glm::vec3& localScale,
+            const glm::vec3& color)
+        {
+            // Scale local position as part of the complete AC assembly
+            glm::vec3 scaledLocalPosition(
+                localPosition.x * acScale.x,
+                localPosition.y * acScale.y,
+                localPosition.z * acScale.z
+            );
+
+            glm::vec3 worldPosition =
+                position + scaledLocalPosition;
+
+            glm::mat4 model =
+                glm::mat4(1.0f);
+
+            // Move the COMPLETE AC into position
+            model =
+                glm::translate(
+                    model,
+                    position
+                );
+
+            // Rotate the COMPLETE AC to the opposite side
+            model =
+                glm::rotate(
+                    model,
+                    glm::radians(180.0f),
+                    glm::vec3(0.0f, 1.0f, 0.0f)
+                );
+
+            // Move each component relative to the AC centre
+            model =
+                glm::translate(
+                    model,
+                    scaledLocalPosition
+                );
+
+            // Scale the individual component
+            model =
+                glm::scale(
+                    model,
+                    glm::vec3(
+                        localScale.x * acScale.x,
+                        localScale.y * acScale.y,
+                        localScale.z * acScale.z
+                    )
+                );
+
+            shader.setVec3(
+                "objectColor",
+                color.x,
+                color.y,
+                color.z
+            );
+
+            shader.setMat4(
+                "model",
+                model
+            );
+
+            cube.Draw();
+        };
+
+
+    // ============================================================
+    // COLOURS
+    // ============================================================
+
+    glm::vec3 body(
+        0.93f,
+        0.94f,
+        0.93f
+    );
+
+    glm::vec3 white(
+        1.0f,
+        1.0f,
+        1.0f
+    );
+
+    glm::vec3 lightGrey(
+        0.78f,
+        0.80f,
+        0.79f
+    );
+
+    glm::vec3 grey(
+        0.55f,
+        0.57f,
+        0.56f
+    );
+
+    glm::vec3 darkGrey(
+        0.10f,
+        0.11f,
+        0.12f
+    );
+
+    glm::vec3 grille(
+        0.24f,
+        0.25f,
+        0.26f
+    );
+
+    glm::vec3 displayBlue(
+        0.02f,
+        0.55f,
+        0.85f
+    );
+
+    glm::vec3 green(
+        0.05f,
+        0.85f,
+        0.18f
+    );
+
+
+    // ============================================================
+    // 1. MAIN AIR CONDITIONER BODY
+    // ============================================================
+
+    drawPart(
+        glm::vec3(
+            0.0f,
+            0.0f,
+            0.0f
+        ),
+
+        glm::vec3(
+            1.65f,
+            0.50f,
+            0.40f
+        ),
+
+        body
+    );
+
+
+    // ============================================================
+    // 2. TOP COVER
+    // ============================================================
+
+    drawPart(
+        glm::vec3(
+            0.0f,
+            0.22f,
+            -0.01f
+        ),
+
+        glm::vec3(
+            1.58f,
+            0.12f,
+            0.38f
+        ),
+
+        white
+    );
+
+
+    // ============================================================
+    // 3. TOP FRONT EDGE
+    // ============================================================
+
+    drawPart(
+        glm::vec3(
+            0.0f,
+            0.30f,
+            -0.04f
+        ),
+
+        glm::vec3(
+            1.45f,
+            0.055f,
+            0.32f
+        ),
+
+        white
+    );
+
+
+    // ============================================================
+    // 4. TOP AIR INTAKE
+    // ============================================================
+
+    drawPart(
+        glm::vec3(
+            0.0f,
+            0.34f,
+            -0.05f
+        ),
+
+        glm::vec3(
+            1.30f,
+            0.035f,
+            0.20f
+        ),
+
+        darkGrey
+    );
+
+
+    // ============================================================
+    // 5. TOP GRILLE
+    // ============================================================
+
+    for (int i = 0; i < 9; i++)
+    {
+        float x =
+            -0.60f +
+            (i * 0.15f);
+
+        drawPart(
+            glm::vec3(
+                x,
+                0.385f,
+                -0.06f
+            ),
+
+            glm::vec3(
+                0.025f,
+                0.025f,
+                0.17f
+            ),
+
+            grille
+        );
+    }
+
+
+    // ============================================================
+    // 6. FRONT PANEL
+    // ============================================================
+
+    drawPart(
+        glm::vec3(
+            0.0f,
+            0.00f,
+            -0.385f
+        ),
+
+        glm::vec3(
+            1.58f,
+            0.38f,
+            0.055f
+        ),
+
+        white
+    );
+
+
+    // ============================================================
+    // 7. FRONT PANEL UPPER SEAM
+    // ============================================================
+
+    drawPart(
+        glm::vec3(
+            0.0f,
+            -0.145f,
+            -0.415f
+        ),
+
+        glm::vec3(
+            1.42f,
+            0.025f,
+            0.025f
+        ),
+
+        lightGrey
+    );
+
+
+    // ============================================================
+    // 8. LOWER AIR OUTLET
+    // ============================================================
+
+    drawPart(
+        glm::vec3(
+            0.0f,
+            -0.205f,
+            -0.425f
+        ),
+
+        glm::vec3(
+            1.30f,
+            0.10f,
+            0.045f
+        ),
+
+        darkGrey
+    );
+
+
+    // ============================================================
+    // 9. AIR OUTLET INNER GRILLE
+    // ============================================================
+
+    drawPart(
+        glm::vec3(
+            0.0f,
+            -0.205f,
+            -0.450f
+        ),
+
+        glm::vec3(
+            1.20f,
+            0.025f,
+            0.025f
+        ),
+
+        grille
+    );
+
+
+    // ============================================================
+    // 10. MAIN AIRFLOW LOUVER
+    // ============================================================
+
+    drawPart(
+        glm::vec3(
+            0.0f,
+            -0.285f,
+            -0.455f
+        ),
+
+        glm::vec3(
+            1.18f,
+            0.025f,
+            0.040f
+        ),
+
+        white
+    );
+
+
+    // ============================================================
+    // 11. VERTICAL LOUVER SECTIONS
+    // ============================================================
+
+    for (int i = 0; i < 7; i++)
+    {
+        float x =
+            -0.65f +
+            (i * 0.216f);
+
+        drawPart(
+            glm::vec3(
+                x,
+                -0.25f,
+                -0.49f
+            ),
+
+            glm::vec3(
+                0.025f,
+                0.07f,
+                0.025f
+            ),
+
+            lightGrey
+        );
+    }
+
+
+    // ============================================================
+    // 12. LEFT SIDE CAP
+    // ============================================================
+
+    drawPart(
+        glm::vec3(
+            -0.82f,
+            0.0f,
+            0.0f
+        ),
+
+        glm::vec3(
+            0.08f,
+            0.43f,
+            0.35f
+        ),
+
+        lightGrey
+    );
+
+
+    // ============================================================
+    // 13. RIGHT SIDE CAP
+    // ============================================================
+
+    drawPart(
+        glm::vec3(
+            0.82f,
+            0.0f,
+            0.0f
+        ),
+
+        glm::vec3(
+            0.08f,
+            0.43f,
+            0.35f
+        ),
+
+        lightGrey
+    );
+
+
+    // ============================================================
+    // 14. LEFT SIDE VENT
+    // ============================================================
+
+    drawPart(
+        glm::vec3(
+            -0.86f,
+            0.02f,
+            -0.05f
+        ),
+
+        glm::vec3(
+            0.025f,
+            0.25f,
+            0.18f
+        ),
+
+        darkGrey
+    );
+
+
+    // ============================================================
+    // 15. RIGHT SIDE VENT
+    // ============================================================
+
+    drawPart(
+        glm::vec3(
+            0.86f,
+            0.02f,
+            -0.05f
+        ),
+
+        glm::vec3(
+            0.025f,
+            0.25f,
+            0.18f
+        ),
+
+        darkGrey
+    );
+
+
+    // ============================================================
+    // 16. DISPLAY PANEL
+    // ============================================================
+
+    drawPart(
+        glm::vec3(
+            0.53f,
+            0.06f,
+            -0.410f
+        ),
+
+        glm::vec3(
+            0.24f,
+            0.095f,
+            0.035f
+        ),
+
+        darkGrey
+    );
+
+
+    // ============================================================
+    // 17. DIGITAL DISPLAY
+    // ============================================================
+
+    drawPart(
+        glm::vec3(
+            0.53f,
+            0.06f,
+            -0.435f
+        ),
+
+        glm::vec3(
+            0.17f,
+            0.045f,
+            0.020f
+        ),
+
+        displayBlue
+    );
+
+
+    // ============================================================
+    // 18. TEMPERATURE SENSOR
+    // ============================================================
+
+    drawPart(
+        glm::vec3(
+            0.25f,
+            0.05f,
+            -0.425f
+        ),
+
+        glm::vec3(
+            0.045f,
+            0.045f,
+            0.030f
+        ),
+
+        darkGrey
+    );
+
+
+    // ============================================================
+    // 19. POWER LED
+    // ============================================================
+
+    drawPart(
+        glm::vec3(
+            0.12f,
+            0.05f,
+            -0.428f
+        ),
+
+        glm::vec3(
+            0.025f,
+            0.025f,
+            0.02f
+        ),
+
+        green
+    );
+
+
+    // ============================================================
+    // 20. BRAND PANEL
+    // ============================================================
+
+    drawPart(
+        glm::vec3(
+            -0.38f,
+            0.07f,
+            -0.445f
+        ),
+
+        glm::vec3(
+            0.25f,
+            0.055f,
+            0.015f
+        ),
+
+        lightGrey
+    );
+
+
+    // ============================================================
+    // 21. BRAND STRIP
+    // ============================================================
+
+    drawPart(
+        glm::vec3(
+            -0.38f,
+            0.07f,
+            -0.463f
+        ),
+
+        glm::vec3(
+            0.18f,
+            0.025f,
+            0.010f
+        ),
+
+        darkGrey
+    );
+
+
+    // ============================================================
+    // 22. LOWER BODY STRIP
+    // ============================================================
+
+    drawPart(
+        glm::vec3(
+            0.0f,
+            -0.25f,
+            -0.42f
+        ),
+
+        glm::vec3(
+            1.45f,
+            0.035f,
+            0.025f
+        ),
+
+        lightGrey
+    );
+
+
+    // ============================================================
+    // 23. LEFT LOWER END CAP
+    // ============================================================
+
+    drawPart(
+        glm::vec3(
+            -0.78f,
+            -0.23f,
+            -0.43f
+        ),
+
+        glm::vec3(
+            0.06f,
+            0.10f,
+            0.025f
+        ),
+
+        grey
+    );
+
+
+    // ============================================================
+    // 24. RIGHT LOWER END CAP
+    // ============================================================
+
+    drawPart(
+        glm::vec3(
+            0.78f,
+            -0.23f,
+            -0.43f
+        ),
+
+        glm::vec3(
+            0.06f,
+            0.10f,
+            0.025f
+        ),
+
+        grey
+    );
+
+
+    // ============================================================
+    // 25. WALL MOUNTING BRACKET
+    // ============================================================
+
+    // Back plate
+    drawPart(
+        glm::vec3(
+            0.0f,
+            0.0f,
+            0.25f
+        ),
+
+        glm::vec3(
+            1.35f,
+            0.38f,
+            0.06f
+        ),
+
+        lightGrey
+    );
+
+
+    // Left mounting support
+    drawPart(
+        glm::vec3(
+            -0.58f,
+            -0.05f,
+            0.30f
+        ),
+
+        glm::vec3(
+            0.08f,
+            0.25f,
+            0.12f
+        ),
+
+        grey
+    );
+
+
+    // Right mounting support
+    drawPart(
+        glm::vec3(
+            0.58f,
+            -0.05f,
+            0.30f
+        ),
+
+        glm::vec3(
+            0.08f,
+            0.25f,
+            0.12f
+        ),
+
+        grey
+    );
+
+
+    // ============================================================
+    // 26. SMALL TOP SIDE DETAILS
+    // ============================================================
+
+    drawPart(
+        glm::vec3(
+            -0.72f,
+            0.31f,
+            -0.05f
+        ),
+
+        glm::vec3(
+            0.10f,
+            0.035f,
+            0.18f
+        ),
+
+        lightGrey
+    );
+
+
+    drawPart(
+        glm::vec3(
+            0.72f,
+            0.31f,
+            -0.05f
+        ),
+
+        glm::vec3(
+            0.10f,
+            0.035f,
+            0.18f
+        ),
+
+        lightGrey
+    );
 }
-
 void Scene::DrawProjectionScreen(
     Shader& shader,
     const Cube& cube) const
@@ -804,4 +1568,7 @@ void Scene::DrawProjector(
 
         shader.setMat4("model", model);
         cube.Draw();
+
+
+
     }

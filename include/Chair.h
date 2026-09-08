@@ -5,6 +5,7 @@
 class Shader;
 class Cube;
 
+
 class Chair
 {
 public:

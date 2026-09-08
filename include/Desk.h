@@ -4,6 +4,7 @@
 
 class Cube;
 class Shader;
+class Texture;
 
 class Desk
 {
@@ -13,6 +14,8 @@ public:
     void Draw(
         Shader& shader,
         const Cube& cube,
+        const Texture& keyboardTexture,
+        const Texture& pcFrontTexture,
         const glm::mat4& parentModel
     ) const;
 
@@ -30,24 +33,6 @@ private:
         const glm::mat4& parentModel,
         float x,
         float z
-    ) const;
-
-    void DrawKeyboardTray(
-        Shader& shader,
-        const Cube& cube,
-        const glm::mat4& parentModel
-    ) const;
-
-    void DrawCpuShelf(
-        Shader& shader,
-        const Cube& cube,
-        const glm::mat4& parentModel
-    ) const;
-
-    void DrawSupportBar(
-        Shader& shader,
-        const Cube& cube,
-        const glm::mat4& parentModel
     ) const;
 
     void DrawLeftPanel(
@@ -68,13 +53,27 @@ private:
         const glm::mat4& parentModel
     ) const;
 
-    //-----------------------------
-    // NEW
-    //-----------------------------
+    void DrawCpuShelf(
+        Shader& shader,
+        const Cube& cube,
+        const Texture& frontTexture,          // ? new parameter
+        const glm::mat4& parentModel) const;
+    void DrawKeyboardTray(
+        Shader& shader,
+        const Cube& cube,
+        const glm::mat4& parentModel
+    ) const;
+
+    void DrawSupportBar(
+        Shader& shader,
+        const Cube& cube,
+        const glm::mat4& parentModel
+    ) const;
 
     void DrawKeyboard(
         Shader& shader,
         const Cube& cube,
+        const Texture& keyboardTexture,
         const glm::mat4& parentModel
     ) const;
 
@@ -83,10 +82,10 @@ private:
         const Cube& cube,
         const glm::mat4& parentModel
     ) const;
+
     void DrawMousePad(
         Shader& shader,
         const Cube& cube,
         const glm::mat4& parentModel
     ) const;
-   
 };

@@ -1,3 +1,0 @@
-C:/Users/Thembelani/source/repos/ComputerLabOpenGL_Phase1/out/build/default/CMakeFiles/ComputerLabOpenGL.dir
-C:/Users/Thembelani/source/repos/ComputerLabOpenGL_Phase1/out/build/default/CMakeFiles/edit_cache.dir
-C:/Users/Thembelani/source/repos/ComputerLabOpenGL_Phase1/out/build/default/CMakeFiles/rebuild_cache.dir

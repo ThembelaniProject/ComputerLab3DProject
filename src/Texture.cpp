@@ -1,15 +1,17 @@
 #include "Texture.h"
 
 #include <glad/glad.h>
-
-#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+
+#include <iostream>
 
 Texture::Texture(const char* path)
 {
+    // Create texture
     glGenTextures(1, &ID);
     glBindTexture(GL_TEXTURE_2D, ID);
 
+    // Wrapping
     glTexParameteri(GL_TEXTURE_2D,
         GL_TEXTURE_WRAP_S,
         GL_REPEAT);
@@ -18,6 +20,7 @@ Texture::Texture(const char* path)
         GL_TEXTURE_WRAP_T,
         GL_REPEAT);
 
+    // Filtering
     glTexParameteri(GL_TEXTURE_2D,
         GL_TEXTURE_MIN_FILTER,
         GL_LINEAR_MIPMAP_LINEAR);
@@ -26,34 +29,62 @@ Texture::Texture(const char* path)
         GL_TEXTURE_MAG_FILTER,
         GL_LINEAR);
 
-    int width;
-    int height;
-    int channels;
-
+    // Flip image vertically
     stbi_set_flip_vertically_on_load(true);
 
-    unsigned char* data =
-        stbi_load(path,
-            &width,
-            &height,
-            &channels,
-            0);
+    int width, height, channels;
 
-    GLenum format =
-        channels == 4 ? GL_RGBA : GL_RGB;
+    unsigned char* data = stbi_load(
+        path,
+        &width,
+        &height,
+        &channels,
+        0);
 
-    glTexImage2D(
-        GL_TEXTURE_2D,
-        0,
-        format,
-        width,
-        height,
-        0,
-        format,
-        GL_UNSIGNED_BYTE,
-        data);
+    if (data)
+    {
+        GLenum format;
 
-    glGenerateMipmap(GL_TEXTURE_2D);
+        if (channels == 1)
+            format = GL_RED;
+        else if (channels == 3)
+            format = GL_RGB;
+        else
+            format = GL_RGBA;
+
+        glTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            format,
+            width,
+            height,
+            0,
+            format,
+            GL_UNSIGNED_BYTE,
+            data);
+
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    if (data)
+    {
+        std::cout << "SUCCESS: "
+            << path
+            << " "
+            << width
+            << "x"
+            << height
+            << std::endl;
+    }
+    else
+    {
+        std::cout << "FAILED: "
+            << path
+            << std::endl;
+
+        std::cout << "Reason: "
+            << stbi_failure_reason()
+            << std::endl;
+    }
 
     stbi_image_free(data);
 }

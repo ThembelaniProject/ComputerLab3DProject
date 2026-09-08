@@ -5,6 +5,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <iostream>
+#include <filesystem>
 
 #include "Shader.h"
 #include "Lighting.h"

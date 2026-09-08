@@ -3,7 +3,7 @@
 #include <vector>
 
 #include <glm/glm.hpp>
-
+#include "Texture.h"
 class Shader;
 class Cube;
 class Room;
@@ -36,10 +36,15 @@ private:
     Window* window;
     Ceiling* ceiling;
 
+    Texture keyboardTexture;
+    Texture pcFrontTexture;
+    Texture airconTexture;
+
     void DrawWorkstations(
         Shader& shader,
         const Cube& cube
     ) const;
+
     
     void DrawLecturerStation(
         Shader& shader,
@@ -72,4 +77,5 @@ private:
         Shader& shader,
         const Cube& cube
     ) const;
+
 };
