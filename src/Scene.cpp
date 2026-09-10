@@ -1,4 +1,4 @@
-﻿#include "Scene.h"
+#include "Scene.h"
 
 #include "Room.h"
 #include "Desk.h"
@@ -27,6 +27,105 @@ Scene::Scene()
     window = new Window();
     ceiling = new Ceiling();
 }
+// ============================================================
+// UPDATE
+// ============================================================
+
+void Scene::Update(float deltaTime)
+{
+    if (window)
+    {
+        window->Update(deltaTime);
+    }
+    if (door)
+    {
+        door->Update(deltaTime);
+    }
+
+    // ------------------------------------------------------------
+   // DAYLIGHT -> EVENING TRANSITION
+   // ------------------------------------------------------------
+
+    if (eveningMode)
+    {
+        daylightIntensity -= transitionSpeed * deltaTime;
+
+        if (daylightIntensity <= 0.0f)
+        {
+            daylightIntensity = 0.0f;
+        }
+    }
+    else
+    {
+        daylightIntensity += transitionSpeed * deltaTime;
+
+        if (daylightIntensity >= 1.0f)
+        {
+            daylightIntensity = 1.0f;
+        }
+    }
+}
+
+
+// ============================================================
+// WINDOW CONTROLS
+// ============================================================
+
+void Scene::ToggleWindow()
+{
+    if (window)
+    {
+        window->Toggle();
+    }
+}
+
+
+void Scene::OpenWindow()
+{
+    if (window)
+    {
+        window->Open();
+    }
+}
+
+
+void Scene::CloseWindow()
+{
+    if (window)
+    {
+        window->Close();
+    }
+}
+
+// ============================================================
+// DOOR CONTROLS
+// ============================================================
+
+void Scene::ToggleDoor()
+{
+    if (door)
+    {
+        door->Toggle();
+    }
+}
+
+void Scene::OpenDoor()
+{
+    if (door)
+    {
+        door->SetAngle(90.0f);
+    }
+}
+
+void Scene::CloseDoor()
+{
+    if (door)
+    {
+        door->SetAngle(0.0f);
+    }
+}
+
+
 
 void Scene::Draw(
     Shader& shader,
@@ -108,10 +207,27 @@ void Scene::DrawWorkstations(
                 glm::radians(180.0f),
                 glm::vec3(0.0f, 1.0f, 0.0f));
 
-            chair->Draw(
-                shader,
-                cube,
-                chairModel);
+            if (row == 0 && col == 0)
+            {
+                // Designated Wheelchair-Accessible Workstation (Aisle Front Row)
+                // Armrests flipped 90 degrees up for unobstructed lateral transfer,
+                // elevated +0.05m to match wheelchair seat height, and caster safety brakes locked.
+                chair->Draw(
+                    shader,
+                    cube,
+                    chairModel,
+                    0.05f,   // Elevated for level wheelchair cushion transfer
+                    90.0f,   // Armrests flipped up 90 degrees
+                    true     // Wheelchair transfer safety brakes locked
+                );
+            }
+            else
+            {
+                chair->Draw(
+                    shader,
+                    cube,
+                    chairModel);
+            }
 
             //---------------- Monitor ----------------
 
@@ -136,20 +252,32 @@ void Scene::DrawLecturerStation(
     const Cube& cube) const
 {
     //-----------------------------
-    // Lecturer desk (left of projector)
+    // Lecturer desk
     //-----------------------------
 
     glm::mat4 model =
         glm::translate(
             glm::mat4(1.0f),
-            glm::vec3(-4.5f, 0.0f, -5.0f));
+            glm::vec3(-4.5f, 0.0f, -4.8f)
+        );
+
+    // Rotate the entire desk setup 180 degrees
+    // so the keyboard and mouse face the monitor.
+    model =
+        glm::rotate(
+            model,
+            glm::radians(180.0f),
+            glm::vec3(0.0f, 1.0f, 0.0f)
+        );
 
     desk->Draw(
         shader,
         cube,
         keyboardTexture,
         pcFrontTexture,
-        model);
+        model
+    );
+
 
     //-----------------------------
     // Lecturer chair
@@ -158,18 +286,23 @@ void Scene::DrawLecturerStation(
     glm::mat4 chairModel =
         glm::translate(
             glm::mat4(1.0f),
-            glm::vec3(-4.5f, 0.0f, -5.5f));
+            glm::vec3(-4.5f, 0.0f, -5.5f)
+        );
 
     chairModel =
         glm::rotate(
             chairModel,
             glm::radians(0.0f),
-            glm::vec3(0.0f, 1.0f, 0.0f));
+            glm::vec3(0.0f, 1.0f, 0.0f)
+        );
 
     chair->Draw(
         shader,
         cube,
-        chairModel);
+        chairModel
+    );
+
+
     //-----------------------------
     // Lecturer monitor
     //-----------------------------
@@ -177,14 +310,22 @@ void Scene::DrawLecturerStation(
     glm::mat4 monitorModel =
         glm::translate(
             glm::mat4(1.0f),
-            glm::vec3(-4.5f, 0.82f, -5.0f));
+            glm::vec3(-4.5f, 0.82f, -4.8f)
+        );
 
-    monitorModel = glm::rotate(
-        monitorModel,
-        glm::radians(180.0f),
-        glm::vec3(0, 1, 0));
+    // Monitor faces the opposite direction
+    monitorModel =
+        glm::rotate(
+            monitorModel,
+            glm::radians(180.0f),
+            glm::vec3(0.0f, 1.0f, 0.0f)
+        );
 
-    monitor->Draw(shader, cube, monitorModel);
+    monitor->Draw(
+        shader,
+        cube,
+        monitorModel
+    );
 }
 void Scene::DrawNetworkCabinet(
     Shader& shader,

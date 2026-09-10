@@ -284,53 +284,128 @@ void Room::DrawWalls(
 
     cube.Draw();
 
-    //-------------------------------------------------
-    // FRONT WALL WITH DOOR
-    //-------------------------------------------------
+    
+        //-------------------------------------------------
+        // FRONT WALL WITH DOOR
+        //-------------------------------------------------
+        //
+        // Room:
+        // Width  = 16m  (-8 to +8)
+        // Height = 3m   (0 to 3)
+        // Front  = Z +6
+        //
+        // Door:
+        // Centre X = -7.5
+        // Width    = 0.90m
+        // Height   = 2.00m
+        //
+        // Door opening:
+        // X = -7.95 to -7.05
+        // Y = 0.0 to 2.0
+        //-------------------------------------------------
 
-    // Left side
+        const float frontZ = roomSize.z / 2.0f;
+
+    const float wallLeft = -8.0f;
+    const float wallRight = 8.0f;
+
+    const float doorLeft = -7.80f;
+    const float doorRight = -6.60f;
+
+    const float doorHeight = 2.0f;
+
+
+    //=================================================
+    // LEFT SIDE OF DOOR
+    //=================================================
 
     model = glm::mat4(1.0f);
 
     model = glm::translate(
         model,
         glm::vec3(
-            -5.0f,
-            roomSize.y / 2,
-            roomSize.z / 2));
+            (wallLeft + doorLeft) * 0.5f,
+            roomSize.y * 0.5f,
+            frontZ
+        )
+    );
 
     model = glm::scale(
         model,
         glm::vec3(
-            6.0f,
+            doorLeft - wallLeft,
             roomSize.y,
-            0.10f));
+            0.10f
+        )
+    );
 
     shader.setMat4("model", model);
-
     cube.Draw();
 
-    // Right side
+
+    //=================================================
+    // RIGHT SIDE OF DOOR
+    //=================================================
 
     model = glm::mat4(1.0f);
 
     model = glm::translate(
         model,
         glm::vec3(
-            5.0f,
-            roomSize.y / 2,
-            roomSize.z / 2));
+            (doorRight + wallRight) * 0.5f,
+            roomSize.y * 0.5f,
+            frontZ
+        )
+    );
 
     model = glm::scale(
         model,
         glm::vec3(
-            6.0f,
+            wallRight - doorRight,
             roomSize.y,
-            0.10f));
+            0.10f
+        )
+    );
+
+    shader.setMat4("model", model);
+    cube.Draw();
+
+
+    //=================================================
+    // WALL ABOVE DOOR
+    //=================================================
+    //
+    // Door ends at Y = 2.0
+    // Room ends at Y = 3.0
+    //
+    // This fills the entire 1m space above the door.
+    //=================================================
+
+    model = glm::mat4(1.0f);
+
+    model = glm::translate(
+        model,
+        glm::vec3(
+            (doorLeft + doorRight) * 0.5f,
+            doorHeight + (roomSize.y - doorHeight) * 0.5f,
+            frontZ
+        )
+    );
+
+    model = glm::scale(
+        model,
+        glm::vec3(
+            doorRight - doorLeft,
+            roomSize.y - doorHeight,
+            0.10f
+        )
+    );
 
     shader.setMat4("model", model);
 
     cube.Draw();
+   
+
 
     //-------------------------------------------------
     // BACK WALL (SOLID)

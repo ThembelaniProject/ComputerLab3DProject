@@ -37,6 +37,9 @@ uniform vec3 objectColor;
 uniform sampler2D texture1;
 uniform bool useTexture;
 
+// NEW
+uniform float alpha;
+
 vec3 CalcDirectionalLight(
     DirLight light,
     vec3 normal,
@@ -49,13 +52,17 @@ vec3 CalcDirectionalLight(
 
     vec3 reflectDir = reflect(-lightDir, normal);
 
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 64.0);
+    float spec =
+        pow(max(dot(viewDir, reflectDir), 0.0), 64.0);
 
-    vec3 ambient = light.ambient * color;
+    vec3 ambient =
+        light.ambient * color;
 
-    vec3 diffuse = light.diffuse * diff * color;
+    vec3 diffuse =
+        light.diffuse * diff * color;
 
-    vec3 specular = light.specular * spec * 0.5;
+    vec3 specular =
+        light.specular * spec * 0.5;
 
     return ambient + diffuse + specular;
 }
@@ -67,15 +74,23 @@ vec3 CalcPointLight(
     vec3 viewDir,
     vec3 color)
 {
-    vec3 lightDir = normalize(light.position - fragPos);
+    vec3 lightDir =
+        normalize(light.position - fragPos);
 
-    float diff = max(dot(normal, lightDir), 0.0);
+    float diff =
+        max(dot(normal, lightDir), 0.0);
 
-    vec3 reflectDir = reflect(-lightDir, normal);
+    vec3 reflectDir =
+        reflect(-lightDir, normal);
 
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 64.0);
+    float spec =
+        pow(
+            max(dot(viewDir, reflectDir), 0.0),
+            64.0
+        );
 
-    float distance = length(light.position - fragPos);
+    float distance =
+        length(light.position - fragPos);
 
     float attenuation =
         1.0 /
@@ -85,9 +100,14 @@ vec3 CalcPointLight(
             light.quadratic * distance * distance
         );
 
-    vec3 ambient = light.ambient * color;
-    vec3 diffuse = light.diffuse * diff * color;
-    vec3 specular = light.specular * spec * 0.5;
+    vec3 ambient =
+        light.ambient * color;
+
+    vec3 diffuse =
+        light.diffuse * diff * color;
+
+    vec3 specular =
+        light.specular * spec * 0.5;
 
     ambient *= attenuation;
     diffuse *= attenuation;
@@ -98,23 +118,30 @@ vec3 CalcPointLight(
 
 void main()
 {
-    vec3 normal = normalize(Normal);
-    vec3 viewDir = normalize(viewPos - FragPos);
+    vec3 normal =
+        normalize(Normal);
 
-    // Choose between texture and solid colour
-    vec3 baseColor = objectColor;
+    vec3 viewDir =
+        normalize(viewPos - FragPos);
+
+    vec3 baseColor =
+        objectColor;
 
     if (useTexture)
-        baseColor = texture(texture1, TexCoord).rgb;
+    {
+        baseColor =
+            texture(texture1, TexCoord).rgb;
+    }
 
     vec3 result =
         CalcDirectionalLight(
             dirLight,
             normal,
             viewDir,
-            baseColor);
+            baseColor
+        );
 
-    for(int i = 0; i < NR_POINT_LIGHTS; i++)
+    for (int i = 0; i < NR_POINT_LIGHTS; i++)
     {
         result +=
             CalcPointLight(
@@ -122,8 +149,10 @@ void main()
                 normal,
                 FragPos,
                 viewDir,
-                baseColor);
+                baseColor
+            );
     }
 
-    FragColor = vec4(result, 1.0);
+    // Alpha now comes from the C++ code
+    FragColor = vec4(result, alpha);
 }
