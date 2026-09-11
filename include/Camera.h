@@ -61,7 +61,15 @@ public:
         float deltaTime
     );
 
+    // ============================================================
+// FLOOR PLAN CAMERA
+// ============================================================
 
+    glm::mat4 GetFloorPlanView() const;
+
+    glm::mat4 GetFloorPlanProjection(
+        float screenWidth,
+        float screenHeight) const;
 
     // Mouse movement
     void ProcessMouseMovement(

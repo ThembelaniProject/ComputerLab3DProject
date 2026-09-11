@@ -145,7 +145,15 @@ void Scene::Draw(
     DrawProjector(shader, cube);
     DrawWhiteboard(shader, cube);
 
+    // Draw floor plan only when toggled on
+    if (showFloorPlan)
+    {
+        DrawFloorPlan(shader, cube);
+    }
 
+    // ===== NEW SAFETY FEATURES =====
+    DrawFireExtinguishers(shader, cube);   // CO₂ extinguishers
+    DrawUnderFloorTrunking(shader, cube);  // Power + data under floor
     glm::mat4 roomModel(1.0f);
 
     door->Draw(
@@ -158,14 +166,257 @@ void Scene::Draw(
         cube,
         roomModel);
 
-    ceiling->Draw(
-        shader,
-        cube,
-        roomModel);
+    // ============================================================
+ // CEILING
+ // ============================================================
+ // Hide ceiling in floor-plan mode so it does not block
+ // the top-down view of the laboratory.
 
-    DrawCeilingLights(
-        shader,
-        cube);
+    if (!showFloorPlan)
+    {
+        ceiling->Draw(
+            shader,
+            cube,
+            roomModel
+        );
+    }
+
+    // ============================================================
+ // CEILING LIGHTS
+ // ============================================================
+ // Hide overhead lights in floor-plan mode.
+
+    if (!showFloorPlan)
+    {
+        DrawCeilingLights(
+            shader,
+            cube
+        );
+    }
+}
+
+void Scene::ToggleFloorPlan()
+{
+    showFloorPlan = !showFloorPlan;
+}
+
+void Scene::DrawFloorPlan(Shader& shader, const Cube& cube) const
+{
+    auto drawFloorRect = [&](float x, float z, float width, float depth, const glm::vec3& color)
+        {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(x, 0.015f, z));
+            model = glm::scale(model, glm::vec3(width, 0.01f, depth));
+            shader.setVec3("objectColor", color.x, color.y, color.z);
+            shader.setMat4("model", model);
+            cube.Draw();
+        };
+
+    glm::vec3 aisleColor(0.75f, 0.78f, 0.82f);
+    glm::vec3 deskZoneColor(0.92f, 0.92f, 0.88f);
+    glm::vec3 safetyColor(0.95f, 0.25f, 0.25f);
+    glm::vec3 trunkColor(0.35f, 0.55f, 0.75f);
+    glm::vec3 lecturerColor(0.85f, 0.80f, 0.70f);
+    glm::vec3 cabinetZone(0.40f, 0.40f, 0.45f);
+    glm::vec3 accessibleColor(0.40f, 0.75f, 0.45f);
+
+    // Main circulation aisles
+    drawFloorRect(0.0f, 0.0f, 1.4f, 14.0f, aisleColor);
+    for (int row = 0; row < 5; row++)
+    {
+        float z = -4.25f + row * 2.5f;
+        drawFloorRect(0.0f, z, 13.0f, 1.1f, aisleColor);
+    }
+
+    // Desk zones
+    for (int row = 0; row < 4; row++)
+    {
+        for (int col = 0; col < 4; col++)
+        {
+            float x = -5.5f + col * 3.2f;
+            float z = -3.0f + row * 2.5f;
+            drawFloorRect(x, z, 2.4f, 1.6f, deskZoneColor);
+        }
+    }
+
+    // Lecturer zone
+    drawFloorRect(-4.5f, -5.1f, 2.8f, 2.2f, lecturerColor);
+
+    // Network cabinet zone
+    drawFloorRect(7.35f, -5.2f, 1.6f, 1.6f, cabinetZone);
+
+    // Under-floor trunking
+    for (int row = 0; row < 4; row++)
+    {
+        float z = -3.0f + row * 2.5f;
+        drawFloorRect(0.0f, z, 12.0f, 0.22f, trunkColor);
+    }
+
+    // Fire extinguisher markers
+    drawFloorRect(7.4f, -5.5f, 0.55f, 0.55f, safetyColor);
+    drawFloorRect(-7.4f, 4.0f, 0.55f, 0.55f, safetyColor);
+
+    // Wheelchair accessible workstation
+    drawFloorRect(-5.5f, -3.0f, 2.6f, 1.8f, accessibleColor);
+}
+
+void Scene::DrawFloorPlanButton(Shader& shader, const Cube& cube, int screenWidth, int screenHeight) const
+{
+    // Switch to 2D orthographic
+    glm::mat4 projection = glm::ortho(0.0f, (float)screenWidth, 0.0f, (float)screenHeight, -1.0f, 1.0f);
+    glm::mat4 view = glm::mat4(1.0f);
+
+    shader.setMat4("projection", projection);
+    shader.setMat4("view", view);
+
+    // Button size and position (bottom-left corner)
+    float btnWidth = 180.0f;
+    float btnHeight = 45.0f;
+    float btnX = 20.0f;
+    float btnY = 20.0f;
+
+    // Background of the button
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(btnX + btnWidth / 2, btnY + btnHeight / 2, 0.0f));
+    model = glm::scale(model, glm::vec3(btnWidth, btnHeight, 1.0f));
+
+    // Change colour when floor plan is active
+    if (showFloorPlan)
+        shader.setVec3("objectColor", 0.20f, 0.55f, 0.90f); // blue when ON
+    else
+        shader.setVec3("objectColor", 0.25f, 0.25f, 0.28f); // dark grey when OFF
+
+    shader.setMat4("model", model);
+    cube.Draw();
+
+    // You can later add text with a font library.
+    // For now the colour change shows the state.
+}
+
+
+bool Scene::IsFloorPlanVisible() const
+{
+    return showFloorPlan;
+}
+
+bool Scene::IsFloorPlanButtonClicked(double mouseX, double mouseY, int screenWidth, int screenHeight) const
+{
+    float glY = static_cast<float>(screenHeight) - static_cast<float>(mouseY);
+
+    const float btnWidth = 180.0f;
+    const float btnHeight = 45.0f;
+    const float btnX = 20.0f;
+    const float btnY = 20.0f;
+
+    return (mouseX >= btnX && mouseX <= btnX + btnWidth &&
+        glY >= btnY && glY <= btnY + btnHeight);
+}
+
+void Scene::DrawFireExtinguishers(Shader& shader, const Cube& cube) const
+{
+    // Helper that draws one CO₂ extinguisher
+    // rotationY rotates the whole extinguisher so the bracket faces the wall
+    auto drawExtinguisher = [&](const glm::vec3& pos, float rotationY = 0.0f)
+        {
+            glm::mat4 base = glm::mat4(1.0f);
+            base = glm::translate(base, pos);
+            base = glm::rotate(base, glm::radians(rotationY), glm::vec3(0.0f, 1.0f, 0.0f));
+
+            // ---- Main red cylinder body ----
+            glm::mat4 model = base;
+            model = glm::scale(model, glm::vec3(0.18f, 0.55f, 0.18f));
+            shader.setVec3("objectColor", 0.85f, 0.05f, 0.05f); // Safety red
+            shader.setMat4("model", model);
+            cube.Draw();
+
+            // ---- Black top / valve ----
+            model = base;
+            model = glm::translate(model, glm::vec3(0.0f, 0.32f, 0.0f));
+            model = glm::scale(model, glm::vec3(0.12f, 0.08f, 0.12f));
+            shader.setVec3("objectColor", 0.12f, 0.12f, 0.12f);
+            shader.setMat4("model", model);
+            cube.Draw();
+
+            // ---- Nozzle / hose ----
+            model = base;
+            model = glm::translate(model, glm::vec3(0.12f, 0.28f, 0.0f));
+            model = glm::rotate(model, glm::radians(-25.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+            model = glm::scale(model, glm::vec3(0.18f, 0.04f, 0.04f));
+            shader.setVec3("objectColor", 0.15f, 0.15f, 0.15f);
+            shader.setMat4("model", model);
+            cube.Draw();
+
+            // ---- Wall bracket ----
+            model = base;
+            model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.12f));
+            model = glm::scale(model, glm::vec3(0.10f, 0.08f, 0.04f));
+            shader.setVec3("objectColor", 0.35f, 0.35f, 0.35f);
+            shader.setMat4("model", model);
+            cube.Draw();
+        };
+
+    // ============================================================
+    // 1. Right wall – next to network cabinet (highest electrical risk)
+    // ============================================================
+    drawExtinguisher(glm::vec3(9.55f, 0.90f, -10.9f), 180.0f);
+
+    // ============================================================
+    // 2. Left wall – near the main exit / door
+    // ============================================================
+    drawExtinguisher(glm::vec3(-7.55f, 1.90f, 0.2f), -90.0f);
+}
+
+void Scene::DrawUnderFloorTrunking(Shader& shader, const Cube& cube) const
+{
+    // Colour of the metal trunking
+    glm::vec3 trunkColor(0.45f, 0.47f, 0.48f);
+    glm::vec3 boxColor(0.55f, 0.55f, 0.55f);
+
+    // -------------------------------------------------
+    // Long under-floor ducts under each row of desks
+    // -------------------------------------------------
+    for (int row = 0; row < 4; row++)
+    {
+        float z = -3.0f + row * 2.5f;
+
+        // Main horizontal trunking running under the whole row
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, 0.02f, z)); // just above floor
+        model = glm::scale(model, glm::vec3(12.5f, 0.04f, 0.18f));
+        shader.setVec3("objectColor", trunkColor.x, trunkColor.y, trunkColor.z);
+        shader.setMat4("model", model);
+        cube.Draw();
+    }
+
+    // -------------------------------------------------
+    // Vertical risers / floor boxes under every desk
+    // -------------------------------------------------
+    for (int row = 0; row < 4; row++)
+    {
+        for (int col = 0; col < 4; col++)
+        {
+            float x = -5.5f + col * 3.2f;
+            float z = -3.0f + row * 2.5f;
+
+            // Small floor box under the desk
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(x, 0.04f, z + 0.15f));
+            model = glm::scale(model, glm::vec3(0.35f, 0.06f, 0.25f));
+            shader.setVec3("objectColor", boxColor.x, boxColor.y, boxColor.z);
+            shader.setMat4("model", model);
+            cube.Draw();
+        }
+    }
+
+    // Also serve the lecturer station
+    {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-4.5f, 0.04f, -4.6f));
+        model = glm::scale(model, glm::vec3(0.40f, 0.06f, 0.30f));
+        shader.setVec3("objectColor", boxColor.x, boxColor.y, boxColor.z);
+        shader.setMat4("model", model);
+        cube.Draw();
+    }
 }
 
 void Scene::DrawWorkstations(

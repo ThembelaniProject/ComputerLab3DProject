@@ -1,5 +1,8 @@
 #include "Camera.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 
 const float SPEED = 4.5f;
 const float SENSITIVITY = 0.1f;
@@ -58,6 +61,109 @@ glm::mat4 Camera::GetViewMatrix()
 
 }
 
+// ============================================================
+// TOP-DOWN FLOOR PLAN VIEW
+// ============================================================
+//
+// Camera position:
+//     X = 0
+//     Y = 12
+//     Z = 0
+//
+// Looking directly down at the centre of the laboratory.
+//
+// ============================================================
+
+glm::mat4 Camera::GetFloorPlanView() const
+{
+    glm::vec3 cameraPosition(
+        0.0f,
+        12.0f,
+        0.0f
+    );
+
+    glm::vec3 target(
+        0.0f,
+        0.0f,
+        0.0f
+    );
+
+    // Keeps the floor-plan orientation stable.
+    //
+    // Because the camera is looking straight down,
+    // the normal Y-up vector cannot be used.
+    //
+    glm::vec3 up(
+        0.0f,
+        0.0f,
+        -1.0f
+    );
+
+    return glm::lookAt(
+        cameraPosition,
+        target,
+        up
+    );
+}
+
+
+// ============================================================
+// TOP-DOWN ORTHOGRAPHIC PROJECTION
+// ============================================================
+//
+// Laboratory dimensions:
+//
+// X = -7.5 -> +7.5  = 15 metres
+// Z = -6.5 -> +6.5  = 13 metres
+//
+// Extra margin is added so the walls are not touching
+// the edge of the screen.
+//
+// ============================================================
+
+glm::mat4 Camera::GetFloorPlanProjection(
+    float screenWidth,
+    float screenHeight) const
+{
+    float aspect =
+        screenWidth / screenHeight;
+
+    const float roomWidth = 15.0f;
+    const float roomDepth = 13.0f;
+
+    const float margin = 1.5f;
+
+    float halfWidth =
+        (roomWidth * 0.5f) + margin;
+
+    float halfHeight =
+        (roomDepth * 0.5f) + margin;
+
+
+    // Maintain the correct room proportions
+    // regardless of window aspect ratio.
+
+    if (aspect >= 1.0f)
+    {
+        halfWidth *= aspect;
+    }
+    else
+    {
+        halfHeight /= aspect;
+    }
+
+
+    return glm::ortho(
+        -halfWidth,
+        halfWidth,
+
+        -halfHeight,
+        halfHeight,
+
+        0.1f,
+        50.0f
+    );
+}
 
 
 

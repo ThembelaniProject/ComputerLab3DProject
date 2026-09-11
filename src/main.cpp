@@ -77,7 +77,26 @@ void processInput(
     Scene& scene
 );
 
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+    {
+        // Get the Scene pointer we stored
+        Scene* scene = static_cast<Scene*>(glfwGetWindowUserPointer(window));
+        if (!scene) return;
 
+        double mx, my;
+        glfwGetCursorPos(window, &mx, &my);
+
+        int width, height;
+        glfwGetWindowSize(window, &width, &height);
+
+        if (scene->IsFloorPlanButtonClicked(mx, my, width, height))
+        {
+            scene->ToggleFloorPlan();
+        }
+    }
+}
 // =====================================================
 // MAIN
 // =====================================================
@@ -307,24 +326,53 @@ int main()
         // -------------------------------------------------
         // CAMERA VIEW
         // -------------------------------------------------
+// ============================================================
+// CAMERA AND PROJECTION
+// ============================================================
 
-        glm::mat4 view =
-            camera.GetViewMatrix();
+        glm::mat4 view;
+        glm::mat4 projection;
 
 
-        // -------------------------------------------------
-        // PROJECTION
-        // -------------------------------------------------
+        // ============================================================
+        // FLOOR PLAN MODE
+        // ============================================================
 
-        glm::mat4 projection =
-            glm::perspective(
-                glm::radians(camera.Zoom),
-                static_cast<float>(SCR_WIDTH) /
-                static_cast<float>(SCR_HEIGHT),
-                0.1f,
-                100.0f
-            );
+        if (scene.IsFloorPlanVisible())
+        {
+            // Top-down orthographic camera
+            view = camera.GetFloorPlanView();
 
+            projection =
+                camera.GetFloorPlanProjection(
+                    static_cast<float>(SCR_WIDTH),
+                    static_cast<float>(SCR_HEIGHT)
+                );
+        }
+
+
+        // ============================================================
+        // NORMAL 3D CAMERA MODE
+        // ============================================================
+
+        else
+        {
+            view = camera.GetViewMatrix();
+
+            projection =
+                glm::perspective(
+                    glm::radians(45.0f),
+                    static_cast<float>(SCR_WIDTH) /
+                    static_cast<float>(SCR_HEIGHT),
+                    0.1f,
+                    100.0f
+                );
+        }
+
+
+        // ============================================================
+        // SEND MATRICES TO SHADER
+        // ============================================================
 
         shader.setMat4(
             "view",
@@ -335,7 +383,6 @@ int main()
             "projection",
             projection
         );
-
 
         // -------------------------------------------------
         // LIGHTING
@@ -498,7 +545,20 @@ void processInput(
 
     oKeyWasPressed =
         oKeyPressed;
+    // =================================================
+// FLOOR PLAN TOGGLE (Press P)
+// =================================================
+    static bool pKeyWasPressed = false;
+    bool pKeyPressed = (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS);
 
+    if (pKeyPressed && !pKeyWasPressed)
+    {
+        scene.ToggleFloorPlan();
+        std::cout << "[Floor Plan]: "
+            << (scene.IsFloorPlanVisible() ? "ON" : "OFF")
+            << std::endl;
+    }
+    pKeyWasPressed = pKeyPressed; 
     // =================================================
 // DOOR OPEN / CLOSE
 // =================================================

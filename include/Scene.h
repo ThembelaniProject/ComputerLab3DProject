@@ -43,6 +43,13 @@ public:
     void OpenDoor();
     void CloseDoor();
 
+    // ===== Floor Plan =====
+    void ToggleFloorPlan();
+    bool IsFloorPlanVisible() const;
+    bool IsFloorPlanButtonClicked(double mouseX, double mouseY, int screenWidth, int screenHeight) const;
+    void DrawFloorPlan(Shader& shader, const Cube& cube) const;
+    void DrawFloorPlanButton(Shader& shader, const Cube& cube, int screenWidth, int screenHeight) const;
+
 private:
 
     Room* room;
@@ -61,7 +68,7 @@ private:
     float daylightIntensity;
     float transitionSpeed;
     bool eveningMode;
-
+    bool showFloorPlan = false;
 
     void DrawWorkstations(
         Shader& shader,
@@ -104,5 +111,9 @@ private:
         Shader& shader,
         const Cube& cube
     ) const;
+   // Add inside the Scene class
+   void DrawFireExtinguishers(Shader& shader, const Cube& cube) const;
+   void DrawUnderFloorTrunking(Shader& shader, const Cube& cube) const;
+
 
 };
